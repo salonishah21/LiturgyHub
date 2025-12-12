@@ -258,7 +258,7 @@ function PageHeader({ title, subtitle, right }) {
  * Dashboard
  */
 
-function DashboardPage({ navigate, lists }) {
+function DashboardPage({ navigate, selectedLibrary, lists }) {
   const tools = [
     { id: "planner", title: "Liturgy Planner" },
     { id: "libraries", title: "Digital Libraries" },
@@ -829,4 +829,241 @@ function SongsTable({ songs, sortBy, setSortBy, lists, setLists }) {
               <tr>
                 <td
                   colSpan={columns.length + 1}
-                  className="px-3 py-6 text-center text-s"
+                  className="px-3 py-6 text-center text-slate-500"
+                >
+                  No songs match your filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {addModalSong && (
+        <AddToListModal
+          item={{ type: "song", id: addModalSong.id, label: addModalSong.title }}
+          lists={lists}
+          setLists={setLists}
+          onClose={() => setAddModalSong(null)}
+          addToList={addToList}
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * Psalm & Mass lists (simplified)
+ */
+
+function PsalmListPage({
+  browseTab,
+  setBrowseTab,
+  selectedLibraryId,
+  setSelectedLibraryId,
+  lists,
+  setLists
+}) {
+  return (
+    <div>
+      <PageHeader
+        title="Psalms & Gospel Acclamations"
+        subtitle="Upcoming celebrations and special liturgies"
+        right={
+          <BrowseHeaderControls
+            browseTab={browseTab}
+            setBrowseTab={setBrowseTab}
+            selectedLibraryId={selectedLibraryId}
+            setSelectedLibraryId={setSelectedLibraryId}
+          />
+        }
+      />
+      <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
+        <table className="w-full text-xs">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="px-3 py-2 text-left font-semibold text-slate-600">
+                Celebration
+              </th>
+              <th className="px-3 py-2 text-left font-semibold text-slate-600">
+                Psalm
+              </th>
+              <th className="px-3 py-2 text-left font-semibold text-slate-600">
+                Title
+              </th>
+              <th className="px-3 py-2 text-left font-semibold text-slate-600">
+                Composer
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {MOCK_PSALMS.map((p) => (
+              <tr key={p.id} className="border-t border-slate-100">
+                <td className="px-3 py-2">{p.celebration}</td>
+                <td className="px-3 py-2">{p.psalm}</td>
+                <td className="px-3 py-2">{p.title}</td>
+                <td className="px-3 py-2">{p.composer}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function MassSettingsListPage({
+  browseTab,
+  setBrowseTab,
+  selectedLibraryId,
+  setSelectedLibraryId
+}) {
+  return (
+    <div>
+      <PageHeader
+        title="Mass Settings"
+        subtitle="Browse by setting"
+        right={
+          <BrowseHeaderControls
+            browseTab={browseTab}
+            setBrowseTab={setBrowseTab}
+            selectedLibraryId={selectedLibraryId}
+            setSelectedLibraryId={setSelectedLibraryId}
+          />
+        }
+      />
+      <div className="grid md:grid-cols-2 gap-3">
+        {MOCK_MASS_SETTINGS.map((m) => (
+          <div
+            key={m.id}
+            className="rounded-2xl border bg-white shadow-sm p-3 space-y-1"
+          >
+            <div className="text-sm font-semibold">{m.title}</div>
+            <div className="text-[11px] text-slate-500">{m.composer}</div>
+            <div className="text-[11px] text-slate-500">
+              Parts: {m.parts.join(", ")}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * My Lists
+ */
+
+function MyListsPage({ lists }) {
+  return (
+    <div>
+      <PageHeader title="My Lists" />
+      <div className="grid md:grid-cols-2 gap-3">
+        {lists.map((list) => (
+          <div
+            key={list.id}
+            className="rounded-2xl border bg-white shadow-sm p-3 space-y-1"
+          >
+            <div className="text-sm font-semibold">{list.name}</div>
+            <div className="text-[11px] text-slate-500">
+              {list.items.length} items
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Add to list modal (simplified)
+ */
+
+function AddToListModal({ item, lists, setLists, onClose, addToList }) {
+  const [selectedListId, setSelectedListId] = useState(
+    lists.length > 0 ? lists[0].id : null
+  );
+  const [newListName, setNewListName] = useState("");
+
+  const handleAdd = () => {
+    if (selectedListId) {
+      addToList(selectedListId, item.id);
+      onClose();
+      return;
+    }
+    if (newListName.trim()) {
+      const id = nextListId(lists);
+      setLists([
+        ...lists,
+        { id, name: newListName.trim(), items: [{ type: item.type, id: item.id }] }
+      ]);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold">Add to My List</div>
+          <button
+            onClick={onClose}
+            className="text-xs text-slate-500 hover:text-slate-800"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="text-xs text-slate-600">
+          {item.type === "song" ? "Song" : "Item"}: {item.label}
+        </div>
+        <div className="space-y-2 text-xs">
+          {lists.length > 0 && (
+            <div>
+              <div className="font-semibold mb-1">Existing lists</div>
+              <select
+                value={selectedListId ?? ""}
+                onChange={(e) =>
+                  setSelectedListId(
+                    e.target.value ? Number(e.target.value) : null
+                  )
+                }
+                className="w-full border rounded-lg px-2 py-1"
+              >
+                {lists.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+                <option value="">– Create new list –</option>
+              </select>
+            </div>
+          )}
+          <div>
+            <div className="font-semibold mb-1">New list</div>
+            <input
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              placeholder="List name"
+              className="w-full border rounded-lg px-2 py-1"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <button
+            onClick={onClose}
+            className="px-3 py-1.5 rounded-button border border-slate-300 text-xs text-slate-600"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAdd}
+            className="px-3 py-1.5 rounded-button bg-primaryBlue text-white text-xs font-semibold uppercase tracking-wide"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
