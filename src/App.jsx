@@ -213,6 +213,7 @@ function TopNav({ route, setRoute }) {
               />
             </div>
           </div>
+          <div className="p-6 bg-red-500 text-white">TAILWIND CHECK</div>
           <button className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold">
             JB
           </button>
